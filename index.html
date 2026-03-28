@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facility Booking Reminder Calendar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .controls {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .control-group input, .control-group select {
+            padding: 8px 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+            width: 150px;
+            transition: border-color 0.2s;
+        }
+
+        .control-group input:focus, .control-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s, background 0.2s;
+            margin-top: 18px;
+        }
+
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .booking-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .booking-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+
+        .booking-card.past {
+            opacity: 0.6;
+            background: #f8f9fa;
+        }
+
+        .booking-card.upcoming {
+            border-color: #28a745;
+            background: #f8fff8;
+        }
+
+        .booking-card.today-reminder {
+            border-color: #ffc107;
+            background: #fffbf0;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .booking-number {
+            background: #667eea;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-past { background: #6c757d; color: white; }
+        .status-today { background: #ffc107; color: #212529; }
+        .status-upcoming { background: #28a745; color: white; }
+
+        .date-section {
+            margin-bottom: 12px;
+        }
+
+        .date-label {
+            font-size: 11px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .date-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #212529;
+        }
+
+        .date-value.reminder {
+            color: #667eea;
+        }
+
+        .date-value.booking {
+            color: #28a745;
+        }
+
+        .days-until {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+            font-size: 14px;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .days-until.urgent {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 30px;
+            color: #6c757d;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .legend {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot-past { background: #6c757d; }
+        .dot-today { background: #ffc107; }
+        .dot-upcoming { background: #28a745; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 Facility Booking Calendar</h1>
+            <p>Bi-weekly Sunday bookings with 1-month advance reminders</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label>First Booking Date</label>
+                <input type="date" id="startDate" value="2026-05-03">
+            </div>
+            <div class="control-group">
+                <label>Number of Bookings</label>
+                <input type="number" id="count" value="12" min="1" max="52">
+            </div>
+            <div class="control-group">
+                <label>Frequency</label>
+                <select id="frequency">
+                    <option value="14">Every 2 weeks</option>
+                    <option value="7">Weekly</option>
+                    <option value="28">Monthly</option>
+                </select>
+            </div>
+            <button onclick="generateCalendar()">Update Calendar</button>
+        </div>
+
+        <div class="calendar-grid" id="calendarGrid">
+            <!-- Generated by JavaScript -->
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-dot dot-past"></div>
+                <span>Past</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot dot-today"></div>
+                <span>Reminder Today</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot dot-upcoming"></div>
+                <span>Upcoming</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function generateCalendar() {
+            const startDateInput = document.getElementById('startDate').value;
+            const count = parseInt(document.getElementById('count').value);
+            const frequency = parseInt(document.getElementById('frequency').value);
+            
+            if (!startDateInput) return;
+
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            const startDate = new Date(startDateInput);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Ensure start date is a Sunday
+            let currentBooking = new Date(startDate);
+            while (currentBooking.getDay() !== 0) {
+                currentBooking.setDate(currentBooking.getDate() + 1);
+            }
+
+            let hasBookings = false;
+
+            for (let i = 0; i < count; i++) {
+                // Calculate reminder date (1 month before)
+                const reminderDate = new Date(currentBooking);
+                reminderDate.setMonth(reminderDate.getMonth() - 1);
+                
+                // If booking is May 3, reminder is April 3, but we want to show actionable info
+                // The user said "3 May 2026 I will need to be reminded on 2 April"
+                // So reminder is actually 1 month minus 1 day (or just the day before the same date)
+                // Actually, let's calculate exactly: May 3 minus 1 month = April 3
+                // But user said April 2, so let's subtract 1 day from the 1-month-prior date
+                reminderDate.setDate(reminderDate.getDate() - 1);
+
+                const bookingDateStr = formatDate(currentBooking);
+                const reminderDateStr = formatDate(reminderDate);
+                
+                const isPast = currentBooking < today;
+                const isTodayReminder = isSameDay(reminderDate, today);
+                const isUpcoming = !isPast && !isTodayReminder;
+
+                const daysUntilReminder = Math.ceil((reminderDate - today) / (1000 * 60 * 60 * 24));
+                const daysUntilBooking = Math.ceil((currentBooking - today) / (1000 * 60 * 60 * 24));
+
+                let statusClass = '';
+                let statusBadge = '';
+                
+                if (isPast) {
+                    statusClass = 'past';
+                    statusBadge = '<span class="status-badge status-past">Past</span>';
+                } else if (isTodayReminder) {
+                    statusClass = 'today-reminder';
+                    statusBadge = '<span class="status-badge status-today">Book Today!</span>';
+                } else {
+                    statusClass = 'upcoming';
+                    statusBadge = '<span class="status-badge status-upcoming">Upcoming</span>';
+                }
+
+                let daysUntilHtml = '';
+                if (!isPast) {
+                    if (isTodayReminder) {
+                        daysUntilHtml = `<div class="days-until urgent">⚠️ Book today for ${bookingDateStr}!</div>`;
+                    } else if (daysUntilReminder > 0) {
+                        daysUntilHtml = `<div class="days-until">⏰ Reminder in ${daysUntilReminder} days (${daysUntilBooking} days until booking)</div>`;
+                    } else if (daysUntilReminder < 0 && daysUntilBooking > 0) {
+                        daysUntilHtml = `<div class="days-until urgent">⚠️ Reminder was ${Math.abs(daysUntilReminder)} days ago - Book soon!</div>`;
+                    }
+                }
+
+                const card = document.createElement('div');
+                card.className = `booking-card ${statusClass}`;
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="booking-number">${i + 1}</div>
+                        ${statusBadge}
+                    </div>
+                    <div class="date-section">
+                        <div class="date-label">📋 Prepare to Book (Reminder)</div>
+                        <div class="date-value reminder">${reminderDateStr}</div>
+                    </div>
+                    <div class="date-section">
+                        <div class="date-label">📅 Actual Booking Date</div>
+                        <div class="date-value booking">${bookingDateStr}</div>
+                    </div>
+                    ${daysUntilHtml}
+                `;
+
+                grid.appendChild(card);
+                hasBookings = true;
+
+                // Add frequency days for next booking
+                currentBooking.setDate(currentBooking.getDate() + frequency);
+                // Ensure next booking is also Sunday (in case frequency adjustment needed)
+                while (currentBooking.getDay() !== 0) {
+                    currentBooking.setDate(currentBooking.getDate() + 1);
+                }
+            }
+
+            if (!hasBookings) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        <h3>No bookings to display</h3>
+                        <p>Adjust your settings to see your booking schedule</p>
+                    </div>
+                `;
+            }
+        }
+
+        function formatDate(date) {
+            const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        function isSameDay(date1, date2) {
+            return date1.getFullYear() === date2.getFullYear() &&
+                   date1.getMonth() === date2.getMonth() &&
+                   date1.getDate() === date2.getDate();
+        }
+
+        // Generate on load
+        generateCalendar();
+    </script>
+</body>
+</html>
