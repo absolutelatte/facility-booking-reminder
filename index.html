@@ -19,7 +19,7 @@
         }
 
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             background: white;
             border-radius: 20px;
@@ -46,19 +46,19 @@
         }
 
         .controls {
-            padding: 20px 30px;
+            padding: 25px 30px;
             background: #f8f9fa;
             border-bottom: 1px solid #e9ecef;
             display: flex;
             gap: 20px;
             flex-wrap: wrap;
-            align-items: center;
+            align-items: flex-end;
         }
 
         .control-group {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 6px;
         }
 
         .control-group label {
@@ -70,11 +70,11 @@
         }
 
         .control-group input, .control-group select {
-            padding: 8px 12px;
+            padding: 10px 12px;
             border: 2px solid #dee2e6;
             border-radius: 8px;
             font-size: 14px;
-            width: 150px;
+            min-width: 140px;
             transition: border-color 0.2s;
         }
 
@@ -83,26 +83,58 @@
             border-color: #667eea;
         }
 
-        button {
+        /* Day Toggle Switch */
+        .day-toggle {
+            display: flex;
+            background: #e9ecef;
+            border-radius: 8px;
+            padding: 4px;
+            gap: 4px;
+        }
+
+        .day-toggle button {
+            padding: 8px 20px;
+            border: none;
+            background: transparent;
+            color: #6c757d;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .day-toggle button.active {
+            background: #667eea;
+            color: white;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+        }
+
+        .day-toggle button:hover:not(.active) {
+            background: rgba(255,255,255,0.5);
+        }
+
+        .update-btn {
             background: #667eea;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 24px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
             transition: transform 0.2s, background 0.2s;
-            margin-top: 18px;
+            font-size: 14px;
         }
 
-        button:hover {
+        .update-btn:hover {
             background: #5568d3;
             transform: translateY(-2px);
         }
 
         .calendar-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
             padding: 30px;
         }
@@ -222,6 +254,7 @@
             text-align: center;
             padding: 60px 30px;
             color: #6c757d;
+            grid-column: 1 / -1;
         }
 
         .empty-state svg {
@@ -236,7 +269,7 @@
             background: #f8f9fa;
             border-top: 1px solid #e9ecef;
             display: flex;
-            gap: 20px;
+            gap: 25px;
             flex-wrap: wrap;
             justify-content: center;
         }
@@ -258,13 +291,26 @@
         .dot-past { background: #6c757d; }
         .dot-today { background: #ffc107; }
         .dot-upcoming { background: #28a745; }
+
+        .current-settings {
+            padding: 15px 30px;
+            background: #e9ecef;
+            font-size: 14px;
+            color: #495057;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .current-settings strong {
+            color: #667eea;
+        }
     </style>
+<base target="_blank">
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>📅 Facility Booking Calendar</h1>
-            <p>Bi-weekly Sunday bookings with 1-month advance reminders</p>
+            <p>Bi-weekly bookings with 1-month advance reminders</p>
         </div>
 
         <div class="controls">
@@ -272,19 +318,35 @@
                 <label>First Booking Date</label>
                 <input type="date" id="startDate" value="2026-05-03">
             </div>
+            
+            <div class="control-group">
+                <label>Booking Day</label>
+                <div class="day-toggle">
+                    <button type="button" id="btnSunday" class="active" onclick="setDay(0)">Sunday</button>
+                    <button type="button" id="btnSaturday" onclick="setDay(6)">Saturday</button>
+                </div>
+            </div>
+
             <div class="control-group">
                 <label>Number of Bookings</label>
                 <input type="number" id="count" value="12" min="1" max="52">
             </div>
+
             <div class="control-group">
                 <label>Frequency</label>
                 <select id="frequency">
                     <option value="14">Every 2 weeks</option>
                     <option value="7">Weekly</option>
+                    <option value="21">Every 3 weeks</option>
                     <option value="28">Monthly</option>
                 </select>
             </div>
-            <button onclick="generateCalendar()">Update Calendar</button>
+
+            <button class="update-btn" onclick="generateCalendar()">Update Calendar</button>
+        </div>
+
+        <div class="current-settings" id="currentSettings">
+            Current: <strong>Every 2 weeks on Sunday</strong> starting <strong>May 3, 2026</strong>
         </div>
 
         <div class="calendar-grid" id="calendarGrid">
@@ -308,6 +370,27 @@
     </div>
 
     <script>
+        let selectedDay = 0; // 0 = Sunday, 6 = Saturday
+
+        function setDay(day) {
+            selectedDay = day;
+            document.getElementById('btnSunday').classList.toggle('active', day === 0);
+            document.getElementById('btnSaturday').classList.toggle('active', day === 6);
+            updateSettingsText();
+        }
+
+        function updateSettingsText() {
+            const startDate = new Date(document.getElementById('startDate').value);
+            const dayName = selectedDay === 0 ? 'Sunday' : 'Saturday';
+            const frequency = document.getElementById('frequency');
+            const freqText = frequency.options[frequency.selectedIndex].text;
+            
+            const dateStr = startDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            
+            document.getElementById('currentSettings').innerHTML = 
+                `Current: <strong>${freqText} on ${dayName}</strong> starting <strong>${dateStr}</strong>`;
+        }
+
         function generateCalendar() {
             const startDateInput = document.getElementById('startDate').value;
             const count = parseInt(document.getElementById('count').value);
@@ -322,24 +405,25 @@
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            // Ensure start date is a Sunday
+            // Adjust to selected day (Saturday or Sunday)
             let currentBooking = new Date(startDate);
-            while (currentBooking.getDay() !== 0) {
-                currentBooking.setDate(currentBooking.getDate() + 1);
+            
+            // If the start date isn't already the selected day, find the next one
+            if (currentBooking.getDay() !== selectedDay) {
+                // Calculate days until next selected day
+                let daysUntil = selectedDay - currentBooking.getDay();
+                if (daysUntil < 0) {
+                    daysUntil += 7;
+                }
+                currentBooking.setDate(currentBooking.getDate() + daysUntil);
             }
 
-            let hasBookings = false;
+            updateSettingsText();
 
             for (let i = 0; i < count; i++) {
-                // Calculate reminder date (1 month before)
+                // Calculate reminder date (1 month before, minus 1 day)
                 const reminderDate = new Date(currentBooking);
                 reminderDate.setMonth(reminderDate.getMonth() - 1);
-                
-                // If booking is May 3, reminder is April 3, but we want to show actionable info
-                // The user said "3 May 2026 I will need to be reminded on 2 April"
-                // So reminder is actually 1 month minus 1 day (or just the day before the same date)
-                // Actually, let's calculate exactly: May 3 minus 1 month = April 3
-                // But user said April 2, so let's subtract 1 day from the 1-month-prior date
                 reminderDate.setDate(reminderDate.getDate() - 1);
 
                 const bookingDateStr = formatDate(currentBooking);
@@ -371,11 +455,13 @@
                     if (isTodayReminder) {
                         daysUntilHtml = `<div class="days-until urgent">⚠️ Book today for ${bookingDateStr}!</div>`;
                     } else if (daysUntilReminder > 0) {
-                        daysUntilHtml = `<div class="days-until">⏰ Reminder in ${daysUntilReminder} days (${daysUntilBooking} days until booking)</div>`;
+                        daysUntilHtml = `<div class="days-until">⏰ Prepare to book in ${daysUntilReminder} days (${daysUntilBooking} days until booking)</div>`;
                     } else if (daysUntilReminder < 0 && daysUntilBooking > 0) {
                         daysUntilHtml = `<div class="days-until urgent">⚠️ Reminder was ${Math.abs(daysUntilReminder)} days ago - Book soon!</div>`;
                     }
                 }
+
+                const dayLabel = selectedDay === 0 ? 'Sun' : 'Sat';
 
                 const card = document.createElement('div');
                 card.className = `booking-card ${statusClass}`;
@@ -385,40 +471,30 @@
                         ${statusBadge}
                     </div>
                     <div class="date-section">
-                        <div class="date-label">📋 Prepare to Book (Reminder)</div>
+                        <div class="date-label">📋 Prepare to Book (${dayLabel} -1 month)</div>
                         <div class="date-value reminder">${reminderDateStr}</div>
                     </div>
                     <div class="date-section">
-                        <div class="date-label">📅 Actual Booking Date</div>
+                        <div class="date-label">📅 Booking Date (${dayLabel})</div>
                         <div class="date-value booking">${bookingDateStr}</div>
                     </div>
                     ${daysUntilHtml}
                 `;
 
                 grid.appendChild(card);
-                hasBookings = true;
 
                 // Add frequency days for next booking
                 currentBooking.setDate(currentBooking.getDate() + frequency);
-                // Ensure next booking is also Sunday (in case frequency adjustment needed)
-                while (currentBooking.getDay() !== 0) {
-                    currentBooking.setDate(currentBooking.getDate() + 1);
+                
+                // Adjust to ensure it lands on the selected day
+                // This handles cases where frequency doesn't align perfectly with weeks
+                if (currentBooking.getDay() !== selectedDay) {
+                    let daysUntil = selectedDay - currentBooking.getDay();
+                    if (daysUntil < 0) {
+                        daysUntil += 7;
+                    }
+                    currentBooking.setDate(currentBooking.getDate() + daysUntil);
                 }
-            }
-
-            if (!hasBookings) {
-                grid.innerHTML = `
-                    <div class="empty-state">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="16" y1="2" x2="16" y2="6"></line>
-                            <line x1="8" y1="2" x2="8" y2="6"></line>
-                            <line x1="3" y1="10" x2="21" y2="10"></line>
-                        </svg>
-                        <h3>No bookings to display</h3>
-                        <p>Adjust your settings to see your booking schedule</p>
-                    </div>
-                `;
             }
         }
 
@@ -432,6 +508,11 @@
                    date1.getMonth() === date2.getMonth() &&
                    date1.getDate() === date2.getDate();
         }
+
+        // Event listeners for real-time updates
+        document.getElementById('startDate').addEventListener('change', updateSettingsText);
+        document.getElementById('frequency').addEventListener('change', updateSettingsText);
+        document.getElementById('count').addEventListener('change', generateCalendar);
 
         // Generate on load
         generateCalendar();
