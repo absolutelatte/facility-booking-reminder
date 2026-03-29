@@ -2,63 +2,112 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Facility Booking Reminder Calendar</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 40px 20px;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
         }
 
         .container {
             max-width: 900px;
             margin: 0 auto;
             background: white;
-            border-radius: 20px;
+            min-height: 100vh;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                border-radius: 20px;
+                margin: 20px auto;
+                min-height: auto;
+                overflow: hidden;
+            }
+            body {
+                padding: 20px;
+            }
         }
 
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 30px;
+            padding: 24px 20px;
             text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         .header h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
+            font-size: 22px;
+            margin-bottom: 8px;
             font-weight: 600;
         }
 
         .header p {
             opacity: 0.9;
-            font-size: 16px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        @media (min-width: 768px) {
+            .header {
+                padding: 30px;
+                position: relative;
+            }
+            .header h1 {
+                font-size: 28px;
+            }
+            .header p {
+                font-size: 16px;
+            }
         }
 
         .controls {
-            padding: 25px 30px;
+            padding: 20px;
             background: #f8f9fa;
             border-bottom: 1px solid #e9ecef;
             display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            align-items: flex-end;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        @media (min-width: 768px) {
+            .controls {
+                padding: 25px 30px;
+                flex-direction: row;
+                flex-wrap: wrap;
+                align-items: flex-end;
+                gap: 20px;
+            }
         }
 
         .control-group {
             display: flex;
             flex-direction: column;
             gap: 6px;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .control-group {
+                width: auto;
+                min-width: 140px;
+            }
         }
 
         .control-group label {
@@ -70,12 +119,15 @@
         }
 
         .control-group input, .control-group select {
-            padding: 10px 12px;
+            padding: 14px 12px;
             border: 2px solid #dee2e6;
-            border-radius: 8px;
-            font-size: 14px;
-            min-width: 140px;
+            border-radius: 10px;
+            font-size: 16px;
+            width: 100%;
             transition: border-color 0.2s;
+            -webkit-appearance: none;
+            appearance: none;
+            background: white;
         }
 
         .control-group input:focus, .control-group select:focus {
@@ -83,76 +135,149 @@
             border-color: #667eea;
         }
 
-        /* Day Toggle Switch */
+        /* Custom select arrow for mobile */
+        .select-wrapper {
+            position: relative;
+        }
+
+        .select-wrapper::after {
+            content: '▼';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #667eea;
+            font-size: 12px;
+            pointer-events: none;
+        }
+
+        /* Day Toggle Switch - Mobile optimized */
         .day-toggle {
             display: flex;
             background: #e9ecef;
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 4px;
             gap: 4px;
+            width: 100%;
         }
 
         .day-toggle button {
-            padding: 8px 20px;
+            flex: 1;
+            padding: 14px 20px;
             border: none;
             background: transparent;
             color: #6c757d;
             font-weight: 600;
             cursor: pointer;
-            border-radius: 6px;
+            border-radius: 8px;
             transition: all 0.2s;
-            font-size: 14px;
+            font-size: 16px;
             margin: 0;
+            touch-action: manipulation;
         }
 
         .day-toggle button.active {
             background: #667eea;
             color: white;
-            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
         }
 
-        .day-toggle button:hover:not(.active) {
-            background: rgba(255,255,255,0.5);
+        .day-toggle button:active {
+            transform: scale(0.98);
         }
 
         .update-btn {
             background: #667eea;
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
+            padding: 16px 24px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: 600;
-            transition: transform 0.2s, background 0.2s;
-            font-size: 14px;
+            transition: all 0.2s;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 8px;
+            touch-action: manipulation;
         }
 
-        .update-btn:hover {
+        .update-btn:hover, .update-btn:active {
             background: #5568d3;
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        @media (min-width: 768px) {
+            .update-btn {
+                width: auto;
+                margin-top: 0;
+                padding: 12px 24px;
+            }
+        }
+
+        .current-settings {
+            padding: 16px 20px;
+            background: #e9ecef;
+            font-size: 14px;
+            color: #495057;
+            border-bottom: 1px solid #dee2e6;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .current-settings strong {
+            color: #667eea;
+        }
+
+        @media (min-width: 768px) {
+            .current-settings {
+                padding: 15px 30px;
+                text-align: left;
+            }
         }
 
         .calendar-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            padding: 30px;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            padding: 20px;
+        }
+
+        @media (min-width: 640px) {
+            .calendar-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+                padding: 30px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .calendar-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
         }
 
         .booking-card {
             background: white;
             border: 2px solid #e9ecef;
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 20px;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            touch-action: manipulation;
         }
 
-        .booking-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            border-color: #667eea;
+        .booking-card:active {
+            transform: scale(0.98);
+        }
+
+        @media (min-width: 768px) {
+            .booking-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                border-color: #667eea;
+            }
         }
 
         .booking-card.past {
@@ -173,35 +298,36 @@
 
         @keyframes pulse {
             0%, 100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4); }
-            50% { box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
+            50% { box-shadow: 0 0 0 12px rgba(255, 193, 7, 0); }
         }
 
         .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 16px;
         }
 
         .booking-number {
             background: #667eea;
             color: white;
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 14px;
+            font-size: 16px;
         }
 
         .status-badge {
-            padding: 4px 12px;
+            padding: 6px 14px;
             border-radius: 20px;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .status-past { background: #6c757d; color: white; }
@@ -209,21 +335,29 @@
         .status-upcoming { background: #28a745; color: white; }
 
         .date-section {
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
 
         .date-label {
-            font-size: 11px;
+            font-size: 12px;
             color: #6c757d;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            font-weight: 600;
         }
 
         .date-value {
             font-size: 18px;
             font-weight: 700;
             color: #212529;
+            line-height: 1.3;
+        }
+
+        @media (min-width: 768px) {
+            .date-value {
+                font-size: 20px;
+            }
         }
 
         .date-value.reminder {
@@ -235,19 +369,20 @@
         }
 
         .days-until {
-            margin-top: 15px;
-            padding-top: 15px;
+            margin-top: 16px;
+            padding-top: 16px;
             border-top: 1px solid #e9ecef;
-            font-size: 14px;
+            font-size: 15px;
             color: #6c757d;
             display: flex;
             align-items: center;
             gap: 8px;
+            font-weight: 500;
         }
 
         .days-until.urgent {
             color: #dc3545;
-            font-weight: 600;
+            font-weight: 700;
         }
 
         .empty-state {
@@ -265,43 +400,58 @@
         }
 
         .legend {
-            padding: 20px 30px;
+            padding: 20px;
             background: #f8f9fa;
             border-top: 1px solid #e9ecef;
             display: flex;
-            gap: 25px;
-            flex-wrap: wrap;
-            justify-content: center;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        @media (min-width: 640px) {
+            .legend {
+                flex-direction: row;
+                justify-content: center;
+                gap: 30px;
+                padding: 20px 30px;
+            }
         }
 
         .legend-item {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 14px;
+            gap: 10px;
+            font-size: 15px;
             color: #6c757d;
+            font-weight: 500;
         }
 
         .legend-dot {
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
+            flex-shrink: 0;
         }
 
         .dot-past { background: #6c757d; }
         .dot-today { background: #ffc107; }
         .dot-upcoming { background: #28a745; }
 
-        .current-settings {
-            padding: 15px 30px;
-            background: #e9ecef;
-            font-size: 14px;
-            color: #495057;
-            border-bottom: 1px solid #dee2e6;
+        /* Touch-friendly scroll for mobile */
+        @media (max-width: 767px) {
+            .calendar-grid {
+                padding-bottom: 40px;
+            }
+            
+            /* Prevent zoom on input focus for iOS */
+            input[type="date"], input[type="number"], select {
+                font-size: 16px;
+            }
         }
 
-        .current-settings strong {
-            color: #667eea;
+        /* Pull to refresh visual indicator space */
+        .spacer {
+            height: 20px;
         }
     </style>
 <base target="_blank">
@@ -334,12 +484,14 @@
 
             <div class="control-group">
                 <label>Frequency</label>
-                <select id="frequency">
-                    <option value="14">Every 2 weeks</option>
-                    <option value="7">Weekly</option>
-                    <option value="21">Every 3 weeks</option>
-                    <option value="28">Monthly</option>
-                </select>
+                <div class="select-wrapper">
+                    <select id="frequency">
+                        <option value="14">Every 2 weeks</option>
+                        <option value="7">Weekly</option>
+                        <option value="21">Every 3 weeks</option>
+                        <option value="28">Monthly</option>
+                    </select>
+                </div>
             </div>
 
             <button class="update-btn" onclick="generateCalendar()">Update Calendar</button>
@@ -356,17 +508,19 @@
         <div class="legend">
             <div class="legend-item">
                 <div class="legend-dot dot-past"></div>
-                <span>Past</span>
+                <span>Past Bookings</span>
             </div>
             <div class="legend-item">
                 <div class="legend-dot dot-today"></div>
-                <span>Reminder Today</span>
+                <span>Book Today</span>
             </div>
             <div class="legend-item">
                 <div class="legend-dot dot-upcoming"></div>
                 <span>Upcoming</span>
             </div>
         </div>
+        
+        <div class="spacer"></div>
     </div>
 
     <script>
@@ -377,6 +531,10 @@
             document.getElementById('btnSunday').classList.toggle('active', day === 0);
             document.getElementById('btnSaturday').classList.toggle('active', day === 6);
             updateSettingsText();
+            // Auto-generate on mobile for better UX, or wait for button on desktop
+            if (window.innerWidth < 768) {
+                generateCalendar();
+            }
         }
 
         function updateSettingsText() {
@@ -408,9 +566,7 @@
             // Adjust to selected day (Saturday or Sunday)
             let currentBooking = new Date(startDate);
             
-            // If the start date isn't already the selected day, find the next one
             if (currentBooking.getDay() !== selectedDay) {
-                // Calculate days until next selected day
                 let daysUntil = selectedDay - currentBooking.getDay();
                 if (daysUntil < 0) {
                     daysUntil += 7;
@@ -455,9 +611,9 @@
                     if (isTodayReminder) {
                         daysUntilHtml = `<div class="days-until urgent">⚠️ Book today for ${bookingDateStr}!</div>`;
                     } else if (daysUntilReminder > 0) {
-                        daysUntilHtml = `<div class="days-until">⏰ Prepare to book in ${daysUntilReminder} days (${daysUntilBooking} days until booking)</div>`;
+                        daysUntilHtml = `<div class="days-until">⏰ Prepare in ${daysUntilReminder} days (${daysUntilBooking} until booking)</div>`;
                     } else if (daysUntilReminder < 0 && daysUntilBooking > 0) {
-                        daysUntilHtml = `<div class="days-until urgent">⚠️ Reminder was ${Math.abs(daysUntilReminder)} days ago - Book soon!</div>`;
+                        daysUntilHtml = `<div class="days-until urgent">⚠️ Reminder was ${Math.abs(daysUntilReminder)} days ago!</div>`;
                     }
                 }
 
@@ -471,7 +627,7 @@
                         ${statusBadge}
                     </div>
                     <div class="date-section">
-                        <div class="date-label">📋 Prepare to Book (${dayLabel} -1 month)</div>
+                        <div class="date-label">📋 Reminder (${dayLabel} -1 month)</div>
                         <div class="date-value reminder">${reminderDateStr}</div>
                     </div>
                     <div class="date-section">
@@ -487,7 +643,6 @@
                 currentBooking.setDate(currentBooking.getDate() + frequency);
                 
                 // Adjust to ensure it lands on the selected day
-                // This handles cases where frequency doesn't align perfectly with weeks
                 if (currentBooking.getDay() !== selectedDay) {
                     let daysUntil = selectedDay - currentBooking.getDay();
                     if (daysUntil < 0) {
@@ -509,10 +664,29 @@
                    date1.getDate() === date2.getDate();
         }
 
-        // Event listeners for real-time updates
-        document.getElementById('startDate').addEventListener('change', updateSettingsText);
-        document.getElementById('frequency').addEventListener('change', updateSettingsText);
-        document.getElementById('count').addEventListener('change', generateCalendar);
+        // Event listeners
+        document.getElementById('startDate').addEventListener('change', function() {
+            updateSettingsText();
+            if (window.innerWidth < 768) generateCalendar();
+        });
+        
+        document.getElementById('frequency').addEventListener('change', function() {
+            updateSettingsText();
+            if (window.innerWidth < 768) generateCalendar();
+        });
+        
+        document.getElementById('count').addEventListener('change', function() {
+            if (window.innerWidth < 768) generateCalendar();
+        });
+
+        // Handle resize
+        let resizeTimer;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function() {
+                // Adjust layout if needed
+            }, 250);
+        });
 
         // Generate on load
         generateCalendar();
